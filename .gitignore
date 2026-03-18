@@ -1,0 +1,25 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.tar.gz
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+
+# Project specific
+*.cookies
+cookies.txt
+*.log
+
+# Docker
+.docker/
