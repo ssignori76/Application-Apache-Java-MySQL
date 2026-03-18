@@ -6,10 +6,10 @@
 # docker login -u lusig76
 
 echo "--- Building images ---"
-docker-compose build
+docker compose build
 
 echo "--- Pushing images to Docker Hub (lusig76) ---"
-docker-compose push backend
-docker-compose push frontend
+docker compose push backend
+docker compose push frontend
 
 echo "--- Done ---"
