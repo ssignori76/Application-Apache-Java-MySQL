@@ -291,3 +291,62 @@ cd backend && mvn test
 ### 6.2 Configurazione Test Backend
 Per consentire la corretta esecuzione dei test automatizzati durante la build Docker (`mvn clean package`), è stato aggiunto il file `backend/src/test/resources/application.properties`. Questo file configura un database H2 in-memory con `ddl-auto=create-drop`, evitando che i test tentino di connettersi a MySQL (non ancora disponibile durante la fase di build dell'immagine).
 
+
+---
+
+## 7. Kubernetes Deployment (Minikube)
+
+L'applicazione può essere distribuita su Kubernetes utilizzando i manifest contenuti nella cartella `k8s/`. La configurazione di Apache è stata completamente esternalizzata in **ConfigMaps**.
+
+### 7.1 Distribuzione su Minikube
+
+1.  **Build delle immagini nel demone Docker di Minikube:**
+    ```bash
+    eval $(minikube docker-env)
+    docker build -t app-backend:latest ./backend
+    docker build -t app-frontend:latest ./frontend
+    ```
+
+2.  **Applicazione dei manifest:**
+    ```bash
+    kubectl apply -f k8s/
+    ```
+
+3.  **Accesso all'applicazione:**
+    Recuperare l'IP di minikube:
+    ```bash
+    minikube ip
+    ```
+    L'applicazione è disponibile all'indirizzo `http://<MINIKUBE_IP>:30080`.
+
+### 7.2 Gestione ConfigMaps (Apache & DB)
+
+Tutti i file di configurazione critici sono gestiti tramite ConfigMaps per consentire aggiornamenti senza rebuild delle immagini.
+
+*   **Verifica della presenza delle ConfigMap:**
+    ```bash
+    kubectl get configmap
+    ```
+    Dovresti vedere `frontend-config` (Apache) e `db-init-config` (SQL Seed).
+
+*   **Ispezione del contenuto:**
+    ```bash
+    kubectl describe configmap frontend-config
+    ```
+
+*   **Come aggiornare la configurazione di Apache:**
+    1.  Modificare il file `k8s/frontend-configmap.yaml`.
+    2.  Applicare la modifica:
+        ```bash
+        kubectl apply -f k8s/frontend-configmap.yaml
+        ```
+    3.  Effettuare un rollout del deployment per ricaricare la nuova configurazione:
+        ```bash
+        kubectl rollout restart deployment frontend
+        ```
+
+*   **Verifica dell'aggiornamento nel pod:**
+    ```bash
+    kubectl exec -it deployment/frontend -- cat /usr/local/apache2/conf/httpd.conf
+    ```
+
