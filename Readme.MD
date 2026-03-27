@@ -1,6 +1,6 @@
 # Runbook Operativo: Applicazione Web su Kubernetes (Minikube)
 
-Questo branch è **specializzato per l'utilizzo con Kubernetes**. La configurazione dell'applicazione è stata completamente esternalizzata in **ConfigMaps**, permettendo una gestione flessibile di Apache e dei dati iniziali del DB.
+Questo branch è **specializzato per l'utilizzo con Kubernetes**. L'intera applicazione è isolata nel namespace `apache-java-mysql`.
 
 ---
 
@@ -20,14 +20,14 @@ Per distribuire l'intero stack applicativo:
     docker build -t app-frontend:latest ./frontend
     ```
 
-3.  **Applicazione dei manifest:**
+3.  **Applicazione dei manifest (Namespace incluso):**
     ```bash
     kubectl apply -f k8s/
     ```
 
 4.  **Verifica dello stato dei Pod:**
     ```bash
-    kubectl get pods -w
+    kubectl get pods -n apache-java-mysql -w
     ```
 
 ---
@@ -54,33 +54,33 @@ L'applicazione è esposta tramite un servizio di tipo `NodePort` sulla porta **3
 
 ## 3. Gestione ConfigMaps (Apache & DB)
 
-Tutti i file di configurazione sono gestiti tramite ConfigMaps.
+Tutti i file di configurazione sono gestiti tramite ConfigMaps nel namespace `apache-java-mysql`.
 
 ### 3.1 Verifica e Ispezione
 *   **Elenco ConfigMap:**
     ```bash
-    kubectl get configmap
+    kubectl get configmap -n apache-java-mysql
     ```
 *   **Contenuto configurazione Apache:**
     ```bash
-    kubectl describe configmap frontend-config
+    kubectl describe configmap frontend-config -n apache-java-mysql
     ```
 
 ### 3.2 Aggiornamento della configurazione (Hot Update)
-Se è necessario modificare la configurazione di Apache (es. cambiare regole di proxy o LogLevel):
+Se è necessario modificare la configurazione di Apache:
 
 1.  Modificare il file `k8s/frontend-configmap.yaml`.
 2.  Applicare la modifica:
     ```bash
     kubectl apply -f k8s/frontend-configmap.yaml
     ```
-3.  Effettuare il restart dei pod per ricaricare la ConfigMap:
+3.  Effettuare il restart dei pod:
     ```bash
-    kubectl rollout restart deployment frontend
+    kubectl rollout restart deployment frontend -n apache-java-mysql
     ```
-4.  Verificare l'applicazione della modifica nel container:
+4.  Verificare l'aggiornamento:
     ```bash
-    kubectl exec -it deployment/frontend -- cat /usr/local/apache2/conf/httpd.conf
+    kubectl exec -n apache-java-mysql -it deployment/frontend -- cat /usr/local/apache2/conf/httpd.conf
     ```
 
 ---
@@ -89,26 +89,26 @@ Se è necessario modificare la configurazione di Apache (es. cambiare regole di 
 
 *   **Log del Frontend (Apache):**
     ```bash
-    kubectl logs -l app=frontend -f
+    kubectl logs -n apache-java-mysql -l app=frontend -f
     ```
 *   **Log del Backend (Spring Boot):**
     ```bash
-    kubectl logs -l app=backend -f
+    kubectl logs -n apache-java-mysql -l app=backend -f
     ```
 *   **Accesso interattivo al database:**
     ```bash
-    kubectl exec -it deployment/db -- mysql -uapp_user -papp_password app_db
+    kubectl exec -n apache-java-mysql -it deployment/db -- mysql -uapp_user -papp_password app_db
     ```
 
 ---
 
 ## 5. Note Tecniche
 
-### 5.1 Dockerfile Fix
-Il `backend/Dockerfile` è stato aggiornato (v0.0.2) per utilizzare un wildcard nel nome del file JAR (`backend-*.jar`), rendendolo indipendente dalla versione specifica del `pom.xml`.
+### 5.1 Namespace dedicato
+Tutti gli oggetti Kubernetes (Deployment, Service, ConfigMap, PVC) sono creati nel namespace `apache-java-mysql`. Questo garantisce isolamento e ordine all'interno del cluster.
 
-### 5.2 CORS e Sicurezza
-La configurazione di Spring Security è stata aggiornata per includere un `CorsConfigurationSource` esplicito, risolvendo gli errori **403 Forbidden** durante le chiamate cross-origin dal browser.
+### 5.2 Dockerfile Fix
+Il `backend/Dockerfile` è stato aggiornato (v0.0.2) per utilizzare un wildcard nel nome del file JAR (`backend-*.jar`).
 
-### 5.3 Test durante la Build
-I test JUnit vengono eseguiti durante la build Docker usando un database H2 in-memory (`src/test/resources/application.properties`), garantendo l'isolamento dalla base dati reale.
+### 5.3 CORS e Sicurezza
+La configurazione di Spring Security include un `CorsConfigurationSource` esplicito per risolvere gli errori **403 Forbidden**.
