@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: app-frontend:latest
-        imagePullPolicy: Never
+        image: lusig76/apache-frontend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         volumeMounts:
