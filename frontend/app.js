@@ -132,7 +132,7 @@ async function loadCustomerOrders() {
         if (res.ok) {
             const orders = await res.json();
             const tbody = document.querySelector('#customerOrdersTable tbody');
-            tbody.innerHTML = orders.map(o => `<tr><td>${escapeHtml(o.id)}</td><td>${escapeHtml(o.serviceName)}</td><td>${escapeHtml(o.status)}</td><td>${escapeHtml(o.note)}</td><td>${escapeHtml(o.createdAt)}</td></tr>`).join('');
+            tbody.innerHTML = orders.map(o => `<tr><td>${escapeHtml(o.id)}</td><td>${escapeHtml(o.serviceName)}</td><td>${escapeHtml(o.status)}</td><td>${escapeHtml(o.note || '')}</td><td>${escapeHtml(o.createdAt)}</td></tr>`).join('');
         }
     } catch (e) { console.error(e); }
 }
@@ -145,7 +145,7 @@ async function loadAdminOrders() {
         if (res.ok) {
             const orders = await res.json();
             const tbody = document.querySelector('#adminOrdersTable tbody');
-            tbody.innerHTML = orders.map(o => `<tr><td>${escapeHtml(o.id)}</td><td>${escapeHtml(o.customerName)}</td><td>${escapeHtml(o.serviceName)}</td><td>${escapeHtml(o.status)}</td><td>${escapeHtml(o.note)}</td><td>${escapeHtml(o.createdAt)}</td></tr>`).join('');
+            tbody.innerHTML = orders.map(o => `<tr><td>${escapeHtml(o.id)}</td><td>${escapeHtml(o.customerName)}</td><td>${escapeHtml(o.serviceName)}</td><td>${escapeHtml(o.status)}</td><td>${escapeHtml(o.note || '')}</td><td>${escapeHtml(o.createdAt)}</td></tr>`).join('');
         }
     } catch (e) { console.error(e); }
 }
@@ -162,30 +162,43 @@ async function loadUsers() {
                 <td>${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}</td>
                 <td>${escapeHtml(u.role)}</td>
                 <td>
-                    <button onclick="editUser(${escapeHtml(u.id)}, '${escapeHtml(u.username)}', '${escapeHtml(u.firstName)}', '${escapeHtml(u.lastName)}', '${escapeHtml(u.role)}')">Edit</button>
-                    <button onclick="deleteUser(${escapeHtml(u.id)})">Delete</button>
+                    <button class="edit-user-btn" data-id="${parseInt(u.id)}">Edit</button>
+                    <button class="delete-user-btn" data-id="${parseInt(u.id)}">Delete</button>
                 </td>
             </tr>`).join('');
+
+            const usersMap = {};
+            users.forEach(u => { usersMap[u.id] = u; });
+
+            tbody.querySelectorAll('.edit-user-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const u = usersMap[btn.dataset.id];
+                    if (u) editUser(u.id, u.username, u.firstName, u.lastName, u.role);
+                });
+            });
+            tbody.querySelectorAll('.delete-user-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteUser(parseInt(btn.dataset.id)));
+            });
         }
     } catch (e) { console.error(e); }
 }
 
-window.editUser = function(id, username, firstName, lastName, role) {
+function editUser(id, username, firstName, lastName, role) {
     document.getElementById('userId').value = id;
     document.getElementById('manageUsername').value = username;
     document.getElementById('manageFirstName').value = firstName;
     document.getElementById('manageLastName').value = lastName;
     document.getElementById('manageRole').value = role;
-};
+}
 
-window.deleteUser = async function(id) {
+async function deleteUser(id) {
     if(confirm('Are you sure?')) {
         try {
             await fetch(`${API_BASE}/admin/users/${id}`, { method: 'DELETE' });
             loadUsers();
         } catch (e) { showAlert('Error deleting user'); }
     }
-};
+}
 
 function showSection(sectionId) {
     document.getElementById('loginSection').classList.add('hidden');
