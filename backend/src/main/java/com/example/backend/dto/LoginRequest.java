@@ -1,7 +1,14 @@
 package com.example.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class LoginRequest {
+    @NotBlank(message = "Username is required")
+    @Size(max = 255, message = "Username must be at most 255 characters")
     private String username;
+
+    @NotBlank(message = "Password is required")
     private String password;
 
     public String getUsername() { return username; }

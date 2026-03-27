@@ -2,9 +2,11 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.OrderDto;
 import com.example.backend.dto.UserDto;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.User;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.service.OrderService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -42,7 +44,7 @@ public class AdminController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserDto userDto) {
         logger.info("Admin creating new user: {}", userDto.getUsername());
         User user = new User();
         user.setUsername(userDto.getUsername());
@@ -55,13 +57,13 @@ public class AdminController {
     }
 
     @PutMapping("/users/{id}")
-    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @Valid @RequestBody UserDto userDto) {
         logger.info("Admin updating user: {}", id);
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setFirstName(userDto.getFirstName());
         user.setLastName(userDto.getLastName());
         user.setRole(userDto.getRole());
-        // Do not update password here, simple example
         User saved = userRepository.save(user);
         return ResponseEntity.ok(new UserDto(saved));
     }
@@ -69,6 +71,9 @@ public class AdminController {
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         logger.info("Admin deleting user: {}", id);
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User not found");
+        }
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }

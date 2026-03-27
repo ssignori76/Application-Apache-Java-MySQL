@@ -2,16 +2,17 @@ services:
   db:
     image: mysql:8.0
     container_name: mysql-db
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: app_db
-      MYSQL_USER: app_user
-      MYSQL_PASSWORD: app_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-app_db}
+      MYSQL_USER: ${DB_USER:-app_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-app_password}
     volumes:
       - db_data:/var/lib/mysql
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,11 +22,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: java-backend
+    restart: unless-stopped
     environment:
       - DB_HOST=db
-      - DB_NAME=app_db
-      - DB_USER=app_user
-      - DB_PASSWORD=app_password
+      - DB_NAME=${DB_NAME:-app_db}
+      - DB_USER=${DB_USER:-app_user}
+      - DB_PASSWORD=${DB_PASSWORD:-app_password}
       # Configurable logging via environment variables
       - LOG_LEVEL_ROOT=INFO
       - LOG_LEVEL_APP=DEBUG
@@ -46,6 +48,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: apache-frontend
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
