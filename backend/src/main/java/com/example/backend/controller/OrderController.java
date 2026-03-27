@@ -5,6 +5,7 @@ import com.example.backend.dto.OrderRequest;
 import com.example.backend.model.AppOrder;
 import com.example.backend.model.User;
 import com.example.backend.service.OrderService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderDto> createOrder(@RequestBody OrderRequest request, Authentication authentication) {
+    public ResponseEntity<OrderDto> createOrder(@Valid @RequestBody OrderRequest request, Authentication authentication) {
         User user = (User) authentication.getPrincipal();
         logger.info("User {} submitting new order for serviceId {}", user.getUsername(), request.getServiceId());
         AppOrder order = orderService.createOrder(user, request);

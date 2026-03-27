@@ -1,5 +1,12 @@
 const API_BASE = '/api/v1';
 
+function escapeHtml(text) {
+    if (text == null) return '';
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(String(text)));
+    return div.innerHTML;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadPublicServices();
@@ -88,10 +95,10 @@ async function loadPublicServices() {
         if (res.ok) {
             const services = await res.json();
             const tbody = document.querySelector('#publicServicesTable tbody');
-            tbody.innerHTML = services.map(s => `<tr><td>${s.name}</td><td>${s.description}</td><td>${s.price}</td></tr>`).join('');
+            tbody.innerHTML = services.map(s => `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(s.description)}</td><td>${escapeHtml(s.price)}</td></tr>`).join('');
             
             const select = document.getElementById('serviceSelect');
-            select.innerHTML = services.map(s => `<option value="${s.id}">${s.name} - $${s.price}</option>`).join('');
+            select.innerHTML = services.map(s => `<option value="${escapeHtml(s.id)}">${escapeHtml(s.name)} - $${escapeHtml(s.price)}</option>`).join('');
         }
     } catch (e) { console.error('Error loading services', e); }
 }
@@ -125,7 +132,7 @@ async function loadCustomerOrders() {
         if (res.ok) {
             const orders = await res.json();
             const tbody = document.querySelector('#customerOrdersTable tbody');
-            tbody.innerHTML = orders.map(o => `<tr><td>${o.id}</td><td>${o.serviceName}</td><td>${o.status}</td><td>${o.note || ''}</td><td>${o.createdAt}</td></tr>`).join('');
+            tbody.innerHTML = orders.map(o => `<tr><td>${escapeHtml(o.id)}</td><td>${escapeHtml(o.serviceName)}</td><td>${escapeHtml(o.status)}</td><td>${escapeHtml(o.note)}</td><td>${escapeHtml(o.createdAt)}</td></tr>`).join('');
         }
     } catch (e) { console.error(e); }
 }
@@ -138,7 +145,7 @@ async function loadAdminOrders() {
         if (res.ok) {
             const orders = await res.json();
             const tbody = document.querySelector('#adminOrdersTable tbody');
-            tbody.innerHTML = orders.map(o => `<tr><td>${o.id}</td><td>${o.customerName}</td><td>${o.serviceName}</td><td>${o.status}</td><td>${o.note || ''}</td><td>${o.createdAt}</td></tr>`).join('');
+            tbody.innerHTML = orders.map(o => `<tr><td>${escapeHtml(o.id)}</td><td>${escapeHtml(o.customerName)}</td><td>${escapeHtml(o.serviceName)}</td><td>${escapeHtml(o.status)}</td><td>${escapeHtml(o.note)}</td><td>${escapeHtml(o.createdAt)}</td></tr>`).join('');
         }
     } catch (e) { console.error(e); }
 }
@@ -150,13 +157,13 @@ async function loadUsers() {
             const users = await res.json();
             const tbody = document.querySelector('#usersTable tbody');
             tbody.innerHTML = users.map(u => `<tr>
-                <td>${u.id}</td>
-                <td>${u.username}</td>
-                <td>${u.firstName} ${u.lastName}</td>
-                <td>${u.role}</td>
+                <td>${escapeHtml(u.id)}</td>
+                <td>${escapeHtml(u.username)}</td>
+                <td>${escapeHtml(u.firstName)} ${escapeHtml(u.lastName)}</td>
+                <td>${escapeHtml(u.role)}</td>
                 <td>
-                    <button onclick="editUser(${u.id}, '${u.username}', '${u.firstName}', '${u.lastName}', '${u.role}')">Edit</button>
-                    <button onclick="deleteUser(${u.id})">Delete</button>
+                    <button onclick="editUser(${escapeHtml(u.id)}, '${escapeHtml(u.username)}', '${escapeHtml(u.firstName)}', '${escapeHtml(u.lastName)}', '${escapeHtml(u.role)}')">Edit</button>
+                    <button onclick="deleteUser(${escapeHtml(u.id)})">Delete</button>
                 </td>
             </tr>`).join('');
         }

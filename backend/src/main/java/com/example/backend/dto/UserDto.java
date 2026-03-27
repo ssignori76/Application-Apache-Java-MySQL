@@ -1,14 +1,27 @@
 package com.example.backend.dto;
 
 import com.example.backend.model.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class UserDto {
     private Long id;
+
+    @NotBlank(message = "Username is required")
+    @Size(max = 255, message = "Username must be at most 255 characters")
     private String username;
+
+    @Size(max = 255, message = "First name must be at most 255 characters")
     private String firstName;
+
+    @Size(max = 255, message = "Last name must be at most 255 characters")
     private String lastName;
+
     private String role;
-    private String password; // used for creation
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password; // used for creation, never included in responses
 
     public UserDto() {}
 
